@@ -6,7 +6,7 @@ from os.path import isfile
 from time import sleep
 from bot import Bot
 
-bot = Bot(paper=False)
+bot = Bot(paper=True)
 ticker = 'T'
 
 if isfile('output.log'):
