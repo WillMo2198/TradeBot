@@ -1,4 +1,4 @@
-![Python](https://img.shields.io/badge/python-3.10%2B-blue)
+![Python](https://img.shields.io/badge/python-3.11%2B-blue)
 ![Alpaca](https://img.shields.io/badge/Broker-Alpaca-yellow)
 ![License](https://img.shields.io/badge/license-MIT-red)
 ![Status](https://img.shields.io/badge/status-Experimental-green)
