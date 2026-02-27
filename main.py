@@ -3,7 +3,7 @@ from datetime import datetime, timedelta, date
 
 
 class Watchdog:
-    def __init__(self, is_paper=False):
+    def __init__(self, stocks, is_paper=False):
         from alpaca.trading.client import TradingClient
         from alpaca.data.historical.stock import StockHistoricalDataClient
         from alpaca.common.exceptions import APIError
@@ -12,7 +12,7 @@ class Watchdog:
         secret = open('secret.txt', 'r').read().replace('\n', '')
         self.trade_client = TradingClient(key, secret, paper=is_paper)
         self.historical_client = StockHistoricalDataClient(key, secret)
-        self.daily_stocks = sp500.copy()
+        self.daily_stocks = stocks
         self.api_error = APIError
         self.avgs = self.avgs(load_json=False)
 
@@ -157,9 +157,9 @@ class Watchdog:
             open_position_symbols[i.symbol] = {'qty': qty, 'entry_price': entry_price}
         return open_position_symbols
 
-    def position_qty(self, symbol: str, price: float) -> float:
+    def position_qty(self, symbol: str, price: float, dollars=1: int) -> float:
         """
-        return current position qty or amount that can be purchased
+        return current position qty or amount that can be purchased given dollar amount
         """
         open_positions = self.open_positions()
         buy_power = self.buying_power()
@@ -167,7 +167,7 @@ class Watchdog:
             pos = symbol
             return float(open_positions[pos]['qty'])
         else:
-            return 1 / price
+            return dollars / price
 
     def order(self, symbol: str, side, tif: Literal["day", "gtc"] = "day", qty: Optional[float] = 1):
         """
@@ -195,10 +195,7 @@ class Watchdog:
 
     def sell(self, ticker: str):
         from alpaca.trading import OrderSide
-        try:
-            return self.order(ticker, OrderSide.SELL, qty=self.position_qty(ticker, price=None))
-        except self.api_error:
-            print('Error {} buying {}...'.format(e, ticker))
+        return self.order(ticker, OrderSide.SELL, qty=self.position_qty(ticker, price=None))
 
     @staticmethod
     def positive_negative_avg(normalized_prices: List):
@@ -240,14 +237,16 @@ class Watchdog:
                 pos_avg = ticker_data['pos_avg']
                 neg_avg = ticker_data['neg_avg']
                 tradeable = self.is_tradeable(ticker)
-                """
-                if [PUT YOUR SELL CONDITIONS HERE]:
+                if current_normal_price >= pos_avg and position_is_open:
                     print("sell {}".format(ticker))
-                    self.sell(ticker)
-                elif [PUT YOUR BUY CONDITIONS HERE]:
+                    try:
+                        self.sell(ticker)
+                    except self.api_error:
+                        continue
+                elif not position_is_open and current_normal_price <= neg_avg and pos_avg > -neg_avg:
                     print("buy {}".format(ticker))
                     self.buy(ticker)
-                """
+
 
 def main():
     from time import sleep
@@ -255,7 +254,7 @@ def main():
     if not dog.holiday():
         while not dog.market_is_open():
             sleep(5)
-        dog.watch()
+        dog.watch(['AAPL', 'MSFT', 'TSLA', 'NVDA'])
     else:
         print("Today is a market holiday.")
     quit()
