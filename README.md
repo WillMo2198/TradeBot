@@ -253,23 +253,6 @@ Below are common “patterns” showing how these metrics can map to buy/sell lo
 pip install alpaca-py pandas numpy statsmodels scipy
 ```
 
-Optional (PCA helpers):
-```bash
-pip install scikit-learn
-```
-
----
-
-## Configuration
-
-You’ll need Alpaca API credentials (paper trading recommended while testing).
-
-Recommended setup:
-- store keys in environment variables
-- or keep `key.txt` / `secret.txt` locally (do not commit to GitHub)
-
----
-
 ## Disclaimer (No Financial Advice)
 
 This software is for **educational and informational purposes only** and is not financial, investment, or trading advice.  
