@@ -3,7 +3,7 @@
 ![License](https://img.shields.io/badge/license-MIT-red)
 ![Status](https://img.shields.io/badge/status-Experimental-green)
 
-# 🐶📈Watchdog — Market Data + Econometrics Metrics + Trading Toolkit (Alpaca-Py)
+# 🐶📈Watchdog — Market Data + Econometrics Metrics + Trading Toolkit
 
 Watchdog is a lightweight **market data + metrics** toolkit built on **Alpaca-Py**.  
 It **does not** ship a “secret strategy.” Instead, it gives you a clean library of **econometrics + quant trading metrics** that are intended to be **combined by you** into **your own buy/sell logic**, risk rules, and portfolio constraints.
