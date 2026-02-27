@@ -1,4 +1,4 @@
-# Watch Dog 🐶📈
+# WatchDog 🐶📈
 
 ![Python](https://img.shields.io/badge/python-3.10%2B-blue)
 ![Alpaca](https://img.shields.io/badge/Broker-Alpaca-green)
