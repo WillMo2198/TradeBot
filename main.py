@@ -195,7 +195,11 @@ class Watchdog:
 
     def sell(self, ticker: str):
         from alpaca.trading import OrderSide
-        return self.order(ticker, OrderSide.SELL, qty=self.position_qty(ticker, price=None))
+        try:
+            return self.order(ticker, OrderSide.SELL, qty=self.position_qty(ticker, price=None))
+        except self.api_error:
+            print('Error {} selling {}...'.format(e, ticker))
+            pass
 
     @staticmethod
     def positive_negative_avg(normalized_prices: List):
