@@ -158,7 +158,7 @@ def get_option_snapshot(
 
 
 # ============================================================
-# 1) Returns metrics (formulas)
+# 1) Returns metrics 
 # ============================================================
 
 def log_returns(
@@ -217,7 +217,7 @@ def excess_returns(
 
 
 # ============================================================
-# 2) Volatility metrics (formulas)
+# 2) Volatility metrics 
 # ============================================================
 
 def rolling_volatility(
@@ -282,7 +282,7 @@ def garch11_volatility(
 
 
 # ============================================================
-# 3) Risk-adjusted metrics (formulas)
+# 3) Risk-adjusted metrics 
 # ============================================================
 
 def sharpe_ratio(
@@ -357,7 +357,7 @@ def max_drawdown(
 
 
 # ============================================================
-# 4) Regression metrics (formulas)
+# 4) Regression metrics 
 # ============================================================
 
 def capm_alpha_beta(
@@ -414,7 +414,7 @@ def multifactor_alpha_betas(
 
 
 # ============================================================
-# 5) Time series econometrics (formulas)
+# 5) Time series econometrics 
 # ============================================================
 
 def ar1_phi(
@@ -541,7 +541,7 @@ def half_life_mean_reversion(
 
 
 # ============================================================
-# 6) Momentum metrics (formulas)
+# 6) Momentum metrics 
 # ============================================================
 
 def sma(
@@ -644,7 +644,7 @@ def momentum_12_1(
 
 
 # ============================================================
-# 7) Liquidity & microstructure metrics (formulas)
+# 7) Liquidity & microstructure metrics 
 # ============================================================
 
 def bid_ask_spread_latest(
@@ -757,7 +757,7 @@ def volume_spike_ratio(
 
 
 # ============================================================
-# 8) Tail & distribution metrics (formulas)
+# 8) Tail & distribution metrics 
 # ============================================================
 
 def historical_var(
@@ -1017,7 +1017,7 @@ def realized_minus_implied_vol_spread(
 
 
 # ============================================================
-# 11) Portfolio construction metrics (formulas)
+# 11) Portfolio construction metrics 
 # ============================================================
 
 def kelly_fraction(
