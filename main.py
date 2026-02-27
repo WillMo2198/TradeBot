@@ -233,10 +233,10 @@ class Watchdog:
                 position_is_open = ticker in self.open_positions().keys()
                 current_price = self.current_price(ticker)
                 """
-                if [PUT YOUR SELL CONDITIONS HERE]:
+                if position_is_open and [PUT YOUR SELL CONDITIONS HERE]:
                     print("sell {}".format(ticker))
                     self.sell(ticker)
-                elif [PUT YOUR BUY CONDITIONS HERE]:
+                elif not position_is_open and [PUT YOUR BUY CONDITIONS HERE]:
                     print("buy {}".format(ticker))
                     self.buy(ticker)
                 """
