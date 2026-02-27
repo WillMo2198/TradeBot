@@ -195,7 +195,10 @@ class Watchdog:
 
     def sell(self, ticker: str):
         from alpaca.trading import OrderSide
-        return self.order(ticker, OrderSide.SELL, qty=self.position_qty(ticker, price=None))
+        try:
+            return self.order(ticker, OrderSide.SELL, qty=self.position_qty(ticker, price=None))
+        except self.api_error:
+            print('Error {} buying {}...'.format(e, ticker))
 
     @staticmethod
     def positive_negative_avg(normalized_prices: List):
@@ -237,16 +240,14 @@ class Watchdog:
                 pos_avg = ticker_data['pos_avg']
                 neg_avg = ticker_data['neg_avg']
                 tradeable = self.is_tradeable(ticker)
-                if current_normal_price >= pos_avg and position_is_open:
+                """
+                if [PUT YOUR SELL CONDITIONS HERE]:
                     print("sell {}".format(ticker))
-                    try:
-                        self.sell(ticker)
-                    except self.api_error:
-                        continue
-                elif not position_is_open and current_normal_price <= neg_avg and pos_avg > -neg_avg:
+                    self.sell(ticker)
+                elif [PUT YOUR BUY CONDITIONS HERE]:
                     print("buy {}".format(ticker))
                     self.buy(ticker)
-
+                """
 
 def main():
     from time import sleep
