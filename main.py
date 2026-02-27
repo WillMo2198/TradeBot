@@ -244,10 +244,7 @@ class Watchdog:
                 """
                 if [PUT YOUR SELL CONDITIONS HERE]:
                     print("sell {}".format(ticker))
-                    try:
-                        self.sell(ticker)
-                    except self.api_error:
-                        continue
+                    self.sell(ticker)
                 elif [PUT YOUR BUY CONDITIONS HERE]:
                     print("buy {}".format(ticker))
                     self.buy(ticker)
