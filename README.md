@@ -19,13 +19,8 @@ Watch Dog is a Python trading bot framework that:
 ⚠️ **Disclaimer:** Educational use only. Trading involves risk. Use
 paper trading before live capital.
 
-⚠️ Financial Risk Warning
-
-Trading stocks, options, or other financial instruments involves substantial risk.
-You may lose all or more than your invested capital.
-
-This project does not provide financial advice.
-Use at your own risk.
+⚠️ **Financial Risk Warning:** Trading stocks, options, or other financial instruments involves substantial risk.
+You may lose all or more than your invested capital. This project does not provide financial advice. Use at your own risk.
 
 ------------------------------------------------------------------------
 
