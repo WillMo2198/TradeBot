@@ -231,16 +231,6 @@ class Watchdog:
             for ticker in self.daily_stocks:
                 position_is_open = ticker in self.open_positions().keys()
                 current_price = self.current_price(ticker)
-                print("{}'s current price: {}".format(ticker, current_price))
-                try:
-                    ticker_data = self.avgs[ticker]
-                except KeyError:
-                    self.daily_stocks.remove(ticker)
-                    continue
-                current_normal_price = current_price - ticker_data['baseline']
-                pos_avg = ticker_data['pos_avg']
-                neg_avg = ticker_data['neg_avg']
-                tradeable = self.is_tradeable(ticker)
                 """
                 if [PUT YOUR SELL CONDITIONS HERE]:
                     print("sell {}".format(ticker))
