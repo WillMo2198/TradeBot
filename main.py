@@ -17,57 +17,12 @@ class Watchdog:
         self.api_error = APIError
         self.avgs = self.avgs(load_json=False)
 
-    def is_tradeable(self, symbol):
-        try:
-            asset = self.trade_client.get_asset(symbol)
-        except (self.api_error, KeyError):
-            return False
-        return bool(asset.fractionable) and bool(asset.tradable)
-
-    def daily_stocks(self) -> List[str]:
-        from sp500 import sp500
-        symbols = sp500.copy()
-        daily_stocks = []
-        for sym in symbols:
-            if self.is_tradeable(sym):
-                daily_stocks.append(sym)
-        return daily_stocks
-
     def is_day_trader(self):
         account = self.trade_client.get_account()
         day_trades = int(account.daytrade_count)
         if day_trades < 3:
             return False
         return True
-
-    def avgs(self, json_file='avgs.json', load_json=False):
-        from json import dump, load
-        if load_json:
-            with open(json_file, 'r') as f:
-                return load(f)
-        else:
-            print('Generating daily averages...')
-            today = datetime.today() - timedelta(days=1)
-            one_week_ago = today - timedelta(days=7)
-            averages = {}
-            open_pos = self.open_positions()
-            for ticker in self.daily_stocks:
-                try:
-                    hist = self.hist(ticker, start=one_week_ago, end=today)
-                    if ticker not in open_pos.keys():
-                        avg_price = self.seven_day_average_price(ticker)
-                    else:
-                        avg_price = open_pos[ticker]['entry_price']
-                    normal_hist = self.normal_hist(hist, baseline=avg_price)
-                    positive_avg, negative_avg = self.positive_negative_avg(normal_hist)
-                    averages[ticker] = {'pos_avg': positive_avg, 'neg_avg': negative_avg, 'baseline': avg_price}
-                except (self.api_error, KeyError):
-                    self.daily_stocks.remove(ticker)
-                    continue
-            with open(json_file, 'w') as f:
-                dump(averages, f)
-                print('Avgs dumped to {}'.format(json_file))
-                return averages
 
     def buying_power(self) -> float:
         """
@@ -119,35 +74,6 @@ class Watchdog:
             low = float(b.low)
             history.append({"t": b.timestamp, "o": open_, "h": high, "l": low, "c": close, "v": volume})
         return history
-
-    def seven_day_average_price(self, symbol: str) -> float:
-        from statistics import mean
-        end = datetime.today() - timedelta(days=1)
-        start = end - timedelta(weeks=1)
-        bars = self.hist(symbol, start, end)
-        prices = []
-        for b in bars:
-            prices.append(b["c"])
-        return mean(prices)
-
-    def can_sell(self, symbol: str) -> float:
-        orders = self.trade_client.get_orders()
-        for o in orders:
-            if (o.side == "buy" and o.filled_at and o.symbol == symbol) or self.is_day_trader():
-                return False
-        return True
-
-    @staticmethod
-    def normal_hist(bars: List[Dict[str, Any]], baseline: Optional[float]) -> List:
-        ys = []
-        for p in bars:
-            open_ = p.get("h")
-            close = p.get("l")
-            if open_ is None or close is None:
-                continue
-            ys.append(float(open_) - float(baseline))
-            ys.append(float(close) - float(baseline))
-        return ys
 
     def open_positions(self) -> dict:
         open_position_symbols = {}
@@ -201,30 +127,6 @@ class Watchdog:
         except self.api_error:
             print('Error {} selling {}...'.format(e, ticker))
             pass
-
-    @staticmethod
-    def positive_negative_avg(normalized_prices: List):
-        from statistics import mean, StatisticsError
-        pos = []
-        neg = []
-        for price in normalized_prices:
-            if price >= 0:
-                pos.append(price)
-            else:
-                neg.append(price)
-        try:
-            pos_avg = mean(pos)
-        except StatisticsError:
-            pos_avg = 0
-        try:
-            neg_avg = mean(neg)
-        except StatisticsError:
-            neg_avg = 0
-        if pos_avg == 0:
-            pos_avg = -neg_avg
-        elif neg_avg == 0:
-            neg_avg = -pos_avg
-        return pos_avg, neg_avg
 
     def watch(self):
         while self.market_is_open():
