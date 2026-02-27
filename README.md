@@ -1,3 +1,8 @@
+![Python](https://img.shields.io/badge/python-3.10%2B-blue)
+![Alpaca](https://img.shields.io/badge/Broker-Alpaca-green)
+![License](https://img.shields.io/badge/license-MIT-lightgrey)
+![Status](https://img.shields.io/badge/status-Experimental-orange)
+
 # 🐶 Watchdog — Market Data + Econometrics Metrics Toolkit (Alpaca-Py)
 
 Watchdog is a lightweight **market data + metrics** toolkit built on **Alpaca-Py**.  
