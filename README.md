@@ -1,7 +1,7 @@
 ![Python](https://img.shields.io/badge/python-3.10%2B-blue)
-![Alpaca](https://img.shields.io/badge/Broker-Alpaca-green)
+![Alpaca](https://img.shields.io/badge/Broker-Alpaca-yellow)
 ![License](https://img.shields.io/badge/license-MIT-lightgrey)
-![Status](https://img.shields.io/badge/status-Experimental-orange)
+![Status](https://img.shields.io/badge/status-Experimental-green)
 
 # 🐶 Watchdog — Market Data + Econometrics Metrics + Trading Toolkit (Alpaca-Py)
 
