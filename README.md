@@ -1,132 +1,246 @@
-# Watchdog — Market Metrics Toolkit (Alpaca-Py)
+# 🐶 Watchdog — Market Data + Econometrics Metrics Toolkit (Alpaca-Py)
 
 Watchdog is a lightweight **market data + metrics** toolkit built on **Alpaca-Py**.  
-It **does not** provide “magic” buy/sell signals. Instead, it computes commonly used **econometrics + quant trading metrics** so **you** can implement your own buy/sell logic, risk rules, and portfolio constraints.
+It **does not** ship a “secret strategy.” Instead, it gives you a clean library of **econometrics + quant trading metrics** that are intended to be **combined by you** into **your own buy/sell logic**, risk rules, and portfolio constraints.
 
-> **You are responsible for your strategy decisions.** Watchdog is designed to help you **measure** the market—not tell you what to trade.
-
----
-
-## What Watchdog Does
-
-- Fetches historical market data (bars, and optionally quotes/options where supported) using **Alpaca-Py**
-- Computes a library of **econometrics / quant metrics**
-- Provides outputs you can feed into:
-  - strategy rules (momentum, mean reversion, stat arb, etc.)
-  - regime filters (trend vs mean-reverting, high-vol vs low-vol)
-  - position sizing (vol targeting, Kelly fraction, risk parity)
-  - portfolio checks (correlation concentration, drawdown limits)
+> ✅ **Design goal:** Measure the market, compute signals, and let **you** decide when to buy/sell.  
+> ⚠️ **You are responsible** for strategy design, testing, and execution.
 
 ---
 
-## What Watchdog Does *Not* Do
+## 📌 Table of Contents
 
-- ❌ It does not provide financial advice
-- ❌ It does not guarantee profits or performance
-- ❌ It does not claim any metric is “the right” trading signal
-- ❌ It does not force a single buy/sell model  
-  (You decide how to combine metrics into your own logic.)
+- [What Watchdog Is](#what-watchdog-is)
+- [What Watchdog Is Not](#what-watchdog-is-not)
+- [How to Build Buy/Sell Logic With Watchdog](#how-to-build-buysell-logic-with-watchdog)
+- [Metrics Included](#metrics-included)
+- [Example Strategy Patterns](#example-strategy-patterns)
+- [Installation](#installation)
+- [Configuration](#configuration)
+- [Disclaimer](#disclaimer-no-financial-advice)
+- [License (MIT)](#license-mit)
+- [Repo Tips](#repo-tips)
+
+---
+
+## What Watchdog Is
+
+- ✅ A toolkit to **fetch market data** via Alpaca-Py (bars; optionally quotes/options where supported)
+- ✅ A set of **feature/metric functions** you can plug into:
+  - buy/sell rules
+  - ranking + selection logic (cross-sectional)
+  - regime switching
+  - risk controls (drawdown, vol, tail)
+  - sizing + allocation logic
+
+---
+
+## What Watchdog Is Not
+
+- ❌ Not financial advice
+- ❌ Not a turnkey “profitable bot”
+- ❌ No guarantee of performance
+- ❌ No single “right” signal — **you decide how to combine metrics**
+
+---
+
+## How to Build Buy/Sell Logic With Watchdog
+
+Watchdog is structured so you can layer your strategy in a **professional** and testable way:
+
+### 1) 🧭 Universe & Filters
+Pick what you trade and apply basic tradability checks:
+- liquidity filters (volume, Amihud)
+- volatility filters (avoid extreme regimes)
+- spread filters (avoid wide bid/ask)
+
+**Typical rules:**
+- Ignore symbols with **low volume** or **high Amihud illiquidity**
+- Skip assets where **spread** is above a threshold
+
+---
+
+### 2) 🧠 Signal Construction (Your Buy/Sell Triggers)
+You create signals from metrics:
+- **Momentum** (trend-following)
+- **Mean reversion** (revert-to-mean)
+- **Stat arb / pairs** (cointegration + spread z-score)
+- **Factor / beta exposure** constraints
+
+A signal is usually something like:
+
+- **Buy condition:** `signal_score > buy_threshold`
+- **Sell condition:** `signal_score < sell_threshold`  
+  (or explicit stop/exit rules)
+
+---
+
+### 3) 🧯 Risk Controls (When NOT to Trade)
+Before placing orders, you typically run “risk gates”:
+- max drawdown limit
+- high-volatility halt
+- tail-risk limit (VaR/CVaR)
+- beta exposure clamp
+
+Example:
+- “Don’t open new trades when **realized vol > 35%**”
+- “Exit to cash when **max drawdown > 10%**”
+
+---
+
+### 4) 📏 Position Sizing & Portfolio Allocation
+Watchdog gives you sizing helpers so your strategy isn’t “all-in”:
+- vol targeting weight
+- Kelly fraction (simplified)
+- inverse-vol risk parity (approx.)
+- correlation concentration checks (eigenvalue spread)
+
+Example sizing logic:
+- “Size positions so each name targets **20% annual vol**”
+- “Reduce weights when correlation concentration spikes”
+
+---
+
+### 5) ✅ Execution (Your Order Logic)
+Watchdog **does not** place orders for you by default.  
+You feed your final decisions into your execution layer (Alpaca trading endpoints).
+
+A typical loop looks like:
+
+1. Compute metrics
+2. Produce signals + apply filters
+3. Compute sizes
+4. Place orders (your code)
+5. Log everything for replay/testing
 
 ---
 
 ## Metrics Included
 
-Below is the menu of metrics Watchdog exposes. Most are computed from Alpaca stock bars (`open/high/low/close/volume/vwap`) and some use quotes or options where supported.
+Most metrics are computed from stock bars (`open/high/low/close/volume/vwap`). Some require quotes/options if available.
 
-### 1) Returns & Performance
-- **Log returns**: `ln(P_t / P_{t-1})`
-- **Simple returns**: `P_t/P_{t-1} - 1`
-- **Cumulative return**: `∏(1+r) - 1`
-- **Excess return**: `r - r_f`
+### Returns & Performance
+- Log returns: `ln(P_t / P_{t-1})`
+- Simple returns: `P_t/P_{t-1} - 1`
+- Cumulative return: `∏(1+r) - 1`
+- Excess returns: `r - r_f`
 
-### 2) Volatility
-- **Rolling volatility** (std of returns over window)
-- **EWMA volatility** (exponentially weighted)
-- **GARCH(1,1) volatility** (parameter-driven variant)
+### Volatility
+- Rolling volatility (std over window)
+- EWMA volatility
+- GARCH(1,1) volatility (parameter-driven)
 
-### 3) Risk-Adjusted Metrics
-- **Sharpe ratio**
-- **Sortino ratio**
-- **Information ratio**
-- **Max drawdown**
+### Risk-Adjusted Metrics
+- Sharpe ratio
+- Sortino ratio
+- Information ratio
+- Max drawdown
 
-### 4) Regression / Factor Exposure
-- **CAPM alpha & beta** via OLS regression:
-  - `r_i - r_f = α + β(r_m - r_f) + ε`
-- **Multi-factor regression** (you provide factor return series):
-  - `r - r_f = α + Σ β_k f_k + ε`
+### Regression / Factor Exposure
+- CAPM alpha/beta via OLS: `r_i - r_f = α + β(r_m - r_f) + ε`
+- Multi-factor regression (you provide factor series): `r - r_f = α + Σ β_k f_k + ε`
 
-### 5) Time Series Econometrics
-- **AR(1) φ** (autocorrelation / momentum vs mean-reversion hint)
-- **ADF test p-value** (stationarity check)
-- **Cointegration test p-value + hedge beta** (pairs/stat-arb)
-- **Spread series**: `y - βx`
-- **Z-score of price** (rolling)
-- **Z-score of spread** (rolling)
-- **Half-life of mean reversion** (from AR-style regression on spread/price)
+### Time Series Econometrics
+- AR(1) φ
+- ADF p-value (stationarity)
+- Cointegration p-value + hedge beta
+- Spread series: `y - βx`
+- Z-score (price / spread)
+- Half-life of mean reversion
 
-### 6) Momentum / Trend / Oscillators
-- **SMA / EMA**
-- **MACD** (line, signal, histogram)
-- **Rate of Change (ROC)**
-- **RSI** (Wilder smoothing)
-- **12–1 momentum** (classic academic momentum measure)
+### Momentum / Oscillators
+- SMA / EMA
+- MACD (line/signal/hist)
+- ROC
+- RSI (Wilder)
+- 12–1 momentum
 
-### 7) Liquidity & Microstructure (as data allows)
-- **Bid–ask spread** (latest quote) and/or time series spread (quotes)
-- **Order book imbalance** (bid size vs ask size proxy from quotes)
-- **Amihud illiquidity**: `|r| / dollar_volume`
-- **VWAP distance**: `(close - vwap)/vwap`
-- **Volume spike ratio**: `volume / SMA(volume)`
-- **Bar spread proxy**: `(high - low)/close`
+### Liquidity & Microstructure (As Data Allows)
+- Bid–ask spread (latest quote or quote series)
+- Order book imbalance proxy (bid vs ask size)
+- Amihud illiquidity: `|r| / dollar_volume`
+- VWAP distance
+- Volume spike ratio
+- Bar spread proxy: `(high - low)/close`
 
-### 8) Tail Risk & Distribution Shape
-- **Historical VaR**
-- **Historical CVaR**
-- **Skewness** of returns
-- **Kurtosis** of returns
+### Tail Risk / Distribution Shape
+- Historical VaR
+- Historical CVaR
+- Skewness / Kurtosis
 
-### 9) Regime / Long Memory
-- **Hurst exponent** (trend vs mean reversion heuristic)
+### Regime / Long Memory
+- Hurst exponent
 
-### 10) Volatility Products / “VIX-ish” Proxies (Important!)
-Alpaca stock data does not typically include the **true VIX index** as an equity.  
-So Watchdog supports:
-- **Term structure proxy** using ratios of **tradable VIX ETPs** (e.g., “short-term” vs “mid-term” vol products)
-- **Implied volatility** (where available) from **options snapshots**
-- **Historical implied volatility** by **inverting Black–Scholes** from historical option bars + underlying prices
-- **Realized–implied vol spread**: `RV - IV`
+### Volatility Products / “VIX-ish” Proxies
+- Term structure proxy via ratios of tradable VIX ETPs
+- Implied volatility (options snapshots, when available)
+- Historical IV by Black–Scholes inversion (option bars + underlying)
+- Realized–implied vol spread: `RV - IV`
 
-> Practical note: “VIX term structure” is best done using VIX futures data. If your broker/data vendor doesn’t provide that, ETP ratios are a proxy, not a substitute.
-
-### 11) Portfolio Construction Helpers
-- **Kelly fraction**: `mean(r) / var(r)` (simplified)
-- **Vol targeting weight**: `target_vol / realized_vol`
-- **Correlation matrix**
-- **Eigenvalue spread** (concentration / single-factor dominance)
-- **PCA factor exposures** (optional; requires scikit-learn)
-- **Inverse-vol “risk parity” weights** (approx.)
+### Portfolio Construction Helpers
+- Kelly fraction (simplified)
+- Vol targeting weight
+- Correlation matrix
+- Eigenvalue spread (concentration)
+- PCA factor exposures (optional)
+- Inverse-vol risk parity weights (approx.)
 
 ---
 
-## How You’re Expected to Use These Metrics
+## Example Strategy Patterns
 
-Watchdog is intentionally modular. A typical workflow is:
+Below are common “patterns” showing how these metrics can map to buy/sell logic.
 
-1. **Regime filter**
-   - e.g., use Hurst + realized volatility to choose momentum vs mean reversion
+### 🟦 Pattern A — Trend-Following Momentum
+**Regime filter**
+- Trade only when `hurst_exponent > 0.5`
+- Avoid extreme volatility (`realized_vol < vol_ceiling`)
 
-2. **Signal**
-   - momentum: moving average cross, MACD, 12–1 momentum
-   - mean reversion: z-score thresholds, half-life
-   - stat arb: cointegration + spread z-score
+**Signal**
+- Buy when `EMA_fast > EMA_slow` (or MACD crosses up)
+- Sell when cross reverses OR trailing stop triggered
 
-3. **Risk & sizing**
-   - vol targeting, max drawdown caps, VaR/CVaR checks
-   - beta constraints / factor neutrality (CAPM or multi-factor)
+**Sizing**
+- Use `vol_target_weight` so high-vol names get smaller size
 
-4. **Execution (your code)**
-   - place orders with Alpaca trading endpoints based on your rules
+---
+
+### 🟩 Pattern B — Mean Reversion
+**Signal**
+- Compute rolling z-score of price
+- Buy when `z < -2`
+- Sell when `z > 0` (mean reversion exit), or when z crosses back above -0.5
+
+**Risk**
+- Skip trades if ADF suggests non-stationarity (or if volatility spikes)
+
+**Holding horizon**
+- Use half-life estimate to set expected hold duration
+
+---
+
+### 🟨 Pattern C — Pairs / Stat-Arb
+**Setup**
+- Test cointegration and compute hedge beta
+
+**Signal**
+- Compute spread z-score
+- Short spread when `z > +2`
+- Long spread when `z < -2`
+- Exit when `|z| < 0.5`
+
+**Risk**
+- Stop out if cointegration breaks (p-value rises) or if spread volatility explodes
+
+---
+
+### 🟥 Pattern D — Risk-Off / Risk-On Gate
+**Risk-off trigger**
+- If realized vol rises above threshold OR tail risk worsens (CVaR < limit)
+- Reduce exposure / stop opening new trades
+
+**Risk-on**
+- When vol normalizes and trend regime returns, allow signals again
 
 ---
 
@@ -136,37 +250,27 @@ Watchdog is intentionally modular. A typical workflow is:
 pip install alpaca-py pandas numpy statsmodels scipy
 ```
 
-Optional:
+Optional (PCA helpers):
 ```bash
 pip install scikit-learn
 ```
 
 ---
 
-## API Keys / Environment
+## Configuration
 
 You’ll need Alpaca API credentials (paper trading recommended while testing).
 
-Common approach:
+Recommended setup:
 - store keys in environment variables
 - or keep `key.txt` / `secret.txt` locally (do not commit to GitHub)
 
 ---
 
-## Example (Conceptual)
-
-Pseudo-logic (not financial advice):
-
-- If **Hurst > 0.5** and **vol is moderate** → enable momentum rules
-- Else if **spread cointegrated** and **|z| > 2** → stat-arb mean reversion
-- Use **vol targeting** to size positions
-- Halt trading if **max drawdown** > threshold
-
----
-
 ## Disclaimer (No Financial Advice)
 
-This software is for **educational and informational purposes only** and is not financial, investment, or trading advice. You are solely responsible for any trading decisions you make.
+This software is for **educational and informational purposes only** and is not financial, investment, or trading advice.  
+You are solely responsible for your trading decisions, backtests, risk management, and compliance with all applicable laws and broker rules.
 
 ### Limitation of Liability (Investment Losses)
 **By using this repository and code, you acknowledge and agree that the author(s) are not responsible for any investment losses, damages, or other liabilities arising from the use of this tool.** Use at your own risk.
@@ -175,7 +279,7 @@ This software is for **educational and informational purposes only** and is not 
 
 ## License (MIT)
 
-This project can be released under the MIT License.
+To use the MIT License:
 
 1) Create a file named `LICENSE` in the repo root  
 2) Paste the standard MIT License text  
@@ -183,15 +287,13 @@ This project can be released under the MIT License.
 - **Year**
 - **Your name**
 
-You can find the canonical MIT text at choosealicense.com.
-
 ---
 
 ## Repo Tips
 
 ### Rename GitHub Repo
-- On GitHub: **Repo → Settings → General → Repository name**
-- Update any local remotes:
+- GitHub: **Repo → Settings → General → Repository name**
+- Update your local remote:
 ```bash
 git remote set-url origin <NEW_REPO_URL>
 ```
@@ -199,17 +301,8 @@ git remote set-url origin <NEW_REPO_URL>
 ---
 
 ## Contributing
+
 PRs welcome. Keep changes small and include:
-- metric name
-- formula (or citation)
-- unit tests or a reproducible example
-
----
-
-## Notes on Data Availability
-- Some metrics depend on **quotes** (bid/ask, sizes) or **options** data.
-- Availability can vary by asset, subscription level, and market hours.
-
----
-
-**Author:** (your name here)
+- metric name + formula
+- a reproducible example (or test)
+- documentation update if behavior changes
