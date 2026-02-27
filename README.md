@@ -228,7 +228,7 @@ Below are common “patterns” showing how these metrics can map to buy/sell lo
 
 **Signal**
 - Compute spread z-score
-- Short spread when $z > +2$
+- Short spread when `z > +2`
 - Long spread when `z < -2`
 - Exit when `|z| < 0.5`
 
