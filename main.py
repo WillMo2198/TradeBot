@@ -8,7 +8,6 @@ class Watchdog:
         from alpaca.trading.client import TradingClient
         from alpaca.data.historical.stock import StockHistoricalDataClient
         from alpaca.common.exceptions import APIError
-        from sp500 import sp500
         key = open('key.txt', 'r').read().replace('\n', '')
         secret = open('secret.txt', 'r').read().replace('\n', '')
         self.trade_client = TradingClient(key, secret, paper=is_paper)
@@ -76,6 +75,9 @@ class Watchdog:
         return history
 
     def open_positions(self) -> dict:
+        """
+        List of tickers of all open positions
+        """
         open_position_symbols = {}
         positions = self.trade_client.get_all_positions()
         for i in positions:
@@ -111,6 +113,9 @@ class Watchdog:
         self.trade_client.submit_order(order_data=order)
 
     def buy(self, ticker: str):
+        """
+        Buy quantity of a share/shares
+        """
         from alpaca.trading import OrderSide
         try:
             price = self.current_price(ticker)
@@ -121,6 +126,9 @@ class Watchdog:
             self.daily_stocks.remove(ticker)
 
     def sell(self, ticker: str):
+        """
+        Liquidate position
+        """
         from alpaca.trading import OrderSide
         try:
             return self.order(ticker, OrderSide.SELL, qty=self.position_qty(ticker, price=None))
