@@ -23,8 +23,6 @@ It **does not** ship a “secret strategy.” Instead, it gives you a clean libr
 - [Installation](#installation)
 - [Configuration](#configuration)
 - [Disclaimer](#disclaimer-no-financial-advice)
-- [License (MIT)](#license-mit)
-- [Repo Tips](#repo-tips)
 
 ---
 
