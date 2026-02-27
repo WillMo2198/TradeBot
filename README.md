@@ -123,7 +123,7 @@ A typical loop looks like:
 ## Metrics Included
 
 Most metrics are computed from stock bars (`open/high/low/close/volume/vwap`). Some require quotes/options if available.
-
+Full list found in `econometrics.py`
 ### Returns & Performance
 - Log returns: `ln(P_t / P_{t-1})`
 - Simple returns: `P_t/P_{t-1} - 1`
