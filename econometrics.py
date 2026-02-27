@@ -1014,3 +1014,154 @@ def realized_minus_implied_vol_spread(
     rv = realized_volatility_annualized(stock_client, symbol, realized_start, realized_end, window, periods_per_year, timeframe)
     df = pd.concat([rv.rename("rv"), implied_vol_series.rename("iv")], axis=1, join="inner").dropna()
     return (df["rv"] - df["iv"]).rename("rv_minus_iv")
+
+
+# ============================================================
+# 11) Portfolio construction metrics (formulas)
+# ============================================================
+
+def kelly_fraction(
+    stock_client: StockHistoricalDataClient,
+    symbol: str,
+    start: Union[str, datetime],
+    end: Union[str, datetime],
+    timeframe: TimeFrame = TimeFrame.Day,
+) -> float:
+    """
+    Simple Kelly for returns: f* = mean(r)/var(r)
+    (For log-utility with small returns; clamp in your strategy.)
+    """
+    r = simple_returns(stock_client, symbol, start, end, timeframe).dropna()
+    mu = float(r.mean())
+    var = float(r.var(ddof=1))
+    if var == 0:
+        return float("nan")
+    return float(mu / var)
+
+
+def vol_target_weight(
+    stock_client: StockHistoricalDataClient,
+    symbol: str,
+    start: Union[str, datetime],
+    end: Union[str, datetime],
+    target_vol_annual: float = 0.20,
+    window: int = 20,
+    periods_per_year: int = 252,
+    timeframe: TimeFrame = TimeFrame.Day,
+) -> float:
+    """w = target_vol / realized_vol"""
+    r = simple_returns(stock_client, symbol, start, end, timeframe).dropna()
+    vol = float(r.tail(window).std(ddof=1) * np.sqrt(periods_per_year))
+    if vol == 0:
+        return float("nan")
+    return float(target_vol_annual / vol)
+
+
+def correlation_matrix(
+    stock_client: StockHistoricalDataClient,
+    symbols: Sequence[str],
+    start: Union[str, datetime],
+    end: Union[str, datetime],
+    timeframe: TimeFrame = TimeFrame.Day,
+) -> pd.DataFrame:
+    """Correlation matrix of returns."""
+    rets = []
+    for s in symbols:
+        rets.append(simple_returns(stock_client, s, start, end, timeframe).rename(s))
+    df = pd.concat(rets, axis=1, join="inner").dropna()
+    return df.corr()
+
+
+def eigenvalue_spread(
+    stock_client: StockHistoricalDataClient,
+    symbols: Sequence[str],
+    start: Union[str, datetime],
+    end: Union[str, datetime],
+    timeframe: TimeFrame = TimeFrame.Day,
+) -> float:
+    """
+    Eigenvalue spread of correlation matrix = (largest eigenvalue) / (sum eigenvalues).
+    Often used as a "single factor dominance" indicator.
+    """
+    C = correlation_matrix(stock_client, symbols, start, end, timeframe)
+    vals = np.linalg.eigvalsh(C.values)
+    vals = np.sort(np.real(vals))
+    if vals.sum() == 0:
+        return float("nan")
+    return float(vals[-1] / vals.sum())
+
+
+def pca_factor_exposures(
+    stock_client: StockHistoricalDataClient,
+    symbols: Sequence[str],
+    start: Union[str, datetime],
+    end: Union[str, datetime],
+    n_components: int = 3,
+    timeframe: TimeFrame = TimeFrame.Day,
+) -> Tuple[pd.DataFrame, np.ndarray]:
+    """
+    PCA on standardized returns.
+    Returns: (loadings_df, explained_variance_ratio)
+    """
+    try:
+        from sklearn.decomposition import PCA
+        from sklearn.preprocessing import StandardScaler
+    except Exception:
+        raise ImportError("Install scikit-learn for PCA: pip install scikit-learn")
+
+    rets = []
+    for s in symbols:
+        rets.append(simple_returns(stock_client, s, start, end, timeframe).rename(s))
+    X = pd.concat(rets, axis=1, join="inner").dropna()
+    Z = StandardScaler().fit_transform(X.values)
+    pca = PCA(n_components=n_components).fit(Z)
+    loadings = pd.DataFrame(pca.components_.T, index=X.columns, columns=[f"PC{i+1}" for i in range(n_components)])
+    return loadings, pca.explained_variance_ratio_
+
+
+def risk_parity_weights_inverse_vol(
+    stock_client: StockHistoricalDataClient,
+    symbols: Sequence[str],
+    start: Union[str, datetime],
+    end: Union[str, datetime],
+    window: int = 60,
+    timeframe: TimeFrame = TimeFrame.Day,
+) -> pd.Series:
+    """Approx risk parity: w_i ∝ 1/σ_i (σ from rolling std of returns)."""
+    vols = {}
+    for s in symbols:
+        r = simple_returns(stock_client, s, start, end, timeframe).dropna()
+        vols[s] = float(r.tail(window).std(ddof=1))
+    inv = pd.Series({k: (1.0 / v if v and np.isfinite(v) else np.nan) for k, v in vols.items()}).dropna()
+    return inv / inv.sum()
+
+
+# ============================================================
+# 12) Convenience regime flags (using earlier metrics)
+# ============================================================
+
+def trending_regime(
+    stock_client: StockHistoricalDataClient,
+    symbol: str,
+    start: Union[str, datetime],
+    end: Union[str, datetime],
+    hurst_threshold: float = 0.5,
+    timeframe: TimeFrame = TimeFrame.Day,
+) -> bool:
+    """Trending if H > threshold."""
+    return hurst_exponent(stock_client, symbol, start, end, timeframe=timeframe) > hurst_threshold
+
+
+def high_vol_regime(
+    stock_client: StockHistoricalDataClient,
+    symbol: str,
+    start: Union[str, datetime],
+    end: Union[str, datetime],
+    window: int = 20,
+    vol_threshold_annual: float = 0.30,
+    periods_per_year: int = 252,
+    timeframe: TimeFrame = TimeFrame.Day,
+) -> bool:
+    """High vol if realized vol > threshold."""
+    rv = realized_volatility_annualized(stock_client, symbol, start, end, window, periods_per_year, timeframe)
+    return bool(rv.iloc[-1] > vol_threshold_annual) if len(rv) else False
