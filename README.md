@@ -279,35 +279,3 @@ You are solely responsible for your trading decisions, backtests, risk managemen
 
 ### Limitation of Liability (Investment Losses)
 **By using this repository and code, you acknowledge and agree that the author(s) are not responsible for any investment losses, damages, or other liabilities arising from the use of this tool.** Use at your own risk.
-
----
-
-## License (MIT)
-
-To use the MIT License:
-
-1) Create a file named `LICENSE` in the repo root  
-2) Paste the standard MIT License text  
-3) Replace the placeholders with:
-- **Year**
-- **Your name**
-
----
-
-## Repo Tips
-
-### Rename GitHub Repo
-- GitHub: **Repo → Settings → General → Repository name**
-- Update your local remote:
-```bash
-git remote set-url origin <NEW_REPO_URL>
-```
-
----
-
-## Contributing
-
-PRs welcome. Keep changes small and include:
-- metric name + formula
-- a reproducible example (or test)
-- documentation update if behavior changes
