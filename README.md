@@ -363,7 +363,7 @@ crontab -e
 Example cron entry:
 
 ``` bash
-0 6 * * 1-5 python3 /path/to/watchdog/trade_script.py
+30 9 * * 1-5 python3 /path/to/watchdog/main.py
 ```
 
 Meaning:
@@ -381,7 +381,7 @@ Meaning:
 Cron jobs should always log output for debugging:
 
 ``` bash
-*/15 9-16 * * 1-5 python3 main.py >> watchdog.log 2>&1
+30 9 * * 1-5 python3 /path/to/watchdog/main.py >> watchdog.log 2>&1
 ```
 
 This stores stdout and errors in a log file.
