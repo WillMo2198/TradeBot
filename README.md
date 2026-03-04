@@ -376,18 +376,12 @@ Meaning:
   \*      every month
   1-5     Monday--Friday
 
-Example: run every 15 minutes during market hours
-
-``` bash
-*/15 9-16 * * 1-5 python3 /path/to/watchdog/trade_script.py
-```
-
 ### Logging Execution
 
 Cron jobs should always log output for debugging:
 
 ``` bash
-*/15 9-16 * * 1-5 python3 trade_script.py >> watchdog.log 2>&1
+*/15 9-16 * * 1-5 python3 main.py >> watchdog.log 2>&1
 ```
 
 This stores stdout and errors in a log file.
